@@ -283,7 +283,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 			conditionOld, foundOld := k8sutils.GetCondition(kcfggateway.KonnectGatewayControlPlaneProgrammedType, oldGwConditionsAware)
 			if !foundOld || conditionOld.Status == metav1.ConditionTrue {
-				gwConditionAware.setProgrammed(metav1.ConditionFalse)
+				// Only update the Gateway-level Programmed condition without cascading
+				// to listener conditions. Listener Programmed status should reflect
+				// whether the data plane can serve traffic, not Konnect connectivity.
+				k8sutils.SetProgrammed(gwConditionAware)
 				if err := r.patchStatus(ctx, &gateway, oldGateway); err != nil {
 					return ctrl.Result{}, err
 				}
@@ -313,7 +316,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 			conditionOld, foundOld := k8sutils.GetCondition(kcfggateway.KonnectExtensionReadyType, oldGwConditionsAware)
 			if !foundOld || conditionOld.Status == metav1.ConditionTrue {
-				gwConditionAware.setProgrammed(metav1.ConditionFalse)
+				// Only update the Gateway-level Programmed condition without cascading
+				// to listener conditions. Listener Programmed status should reflect
+				// whether the data plane can serve traffic, not Konnect connectivity.
+				k8sutils.SetProgrammed(gwConditionAware)
 				if err := r.patchStatus(ctx, &gateway, oldGateway); err != nil {
 					return ctrl.Result{}, err
 				}
